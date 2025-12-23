@@ -1,10 +1,21 @@
 try:
     from django.core.management.base import BaseCommand
 except Exception:  # pragma: no cover - allow editing when Django isn't installed
+    class _DummyStyle:
+        def SUCCESS(self, msg):
+            return msg
+        def WARNING(self, msg):
+            return msg
+
+    class _DummyStdout:
+        def write(self, msg):
+            print(msg)
+
     class BaseCommand:
         help = ''
         def __init__(self):
-            pass
+            self.stdout = _DummyStdout()
+            self.style = _DummyStyle()
 
 from core.models import Team, User, Activity, Workout, Leaderboard
 
@@ -51,9 +62,12 @@ class Command(BaseCommand):
 
 
         self.stdout.write(self.style.SUCCESS('Ensuring unique index on email field...'))
-        client = MongoClient('localhost', 27017)
-        db = client['octofit_db']
-        db.core_user.create_index([('email', 1)], unique=True)
-        client.close()
+        try:
+            client = MongoClient('localhost', 27017, serverSelectionTimeoutMS=2000)
+            db = client['octofit_db']
+            db.core_user.create_index([('email', 1)], unique=True)
+            client.close()
+        except Exception:
+            self.stdout.write(self.style.WARNING('Could not connect to MongoDB — skipping index creation.'))
 
         self.stdout.write(self.style.SUCCESS('Database populated with test data!'))
