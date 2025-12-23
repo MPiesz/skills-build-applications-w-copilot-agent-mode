@@ -1,4 +1,11 @@
-from django.core.management.base import BaseCommand
+try:
+    from django.core.management.base import BaseCommand
+except Exception:  # pragma: no cover - allow editing when Django isn't installed
+    class BaseCommand:
+        help = ''
+        def __init__(self):
+            pass
+
 from core.models import Team, User, Activity, Workout, Leaderboard
 
 from pymongo import MongoClient
