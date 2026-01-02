@@ -19,7 +19,12 @@ except Exception:  # pragma: no cover - allow editing when Django isn't installe
 
 from core.models import Team, User, Activity, Workout, Leaderboard
 
-from pymongo import MongoClient
+try:
+    from pymongo import MongoClient
+except Exception:  # pragma: no cover - allow editing when pymongo isn't installed
+    class MongoClient:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError('pymongo is not installed')
 
 class Command(BaseCommand):
     help = 'Populate the octofit_db database with test data'
